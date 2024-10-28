@@ -42,17 +42,34 @@ model Session {
     user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model UserDetails {
+    id            String  @id @default(cuid())
+    user          User    @relation(fields: [userId], references: [id])
+    userId        String  @unique
+    last_name     String
+    first_name    String
+    middle_name   String?
+    age           Int
+    sex           String?
+    address       String?
+    contactNumber String?
+    position      String
+    monthlySalary String?
+}
+
 model User {
-    id            String    @id @default(cuid())
+    id            String       @id @default(cuid())
     name          String?
-    email         String?   @unique
+    email         String?      @unique
     emailVerified DateTime?
     image         String?
-    username      String
-    password      String
-    role          Int
+    username      String       @unique
+    password      String // @db.Text
+    role          Int          @default(1)
     accounts      Account[]
     sessions      Session[]
+    UserDetails   UserDetails?
+    Dentist       Dentist[]
 }
 
 model VerificationToken {
@@ -61,4 +78,70 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+model Dentist {
+    id          String        @id @default(cuid())
+    user        User          @relation(fields: [userId], references: [id])
+    userId      String
+    Patient     Patient[]
+    Appointment Appointment[]
+}
+
+model MedicalHistory {
+    id                 String  @id @default(cuid())
+    patient            Patient @relation(fields: [patientId], references: [id])
+    patientId          String  @unique
+    hospitalization    String?
+    medications        String?
+    diseases           String?
+    allergies          String?
+    xray               String?
+    facialMarks        String?
+    tobaccoConsumption String?
+    alcoholConsumption String?
+}
+
+model Procedure {
+    id            String      @id @default(cuid())
+    procedureName String
+    Treatment     Treatment[]
+}
+
+model Treatment {
+    id          String    @id @default(cuid())
+    patient     Patient   @relation(fields: [patientId], references: [id])
+    patientId   String
+    Procedure   Procedure @relation(fields: [procedureId], references: [id])
+    procedureId String
+}
+
+model Appointment {
+    id                  String   @id @default(cuid())
+    patient             Patient  @relation(fields: [patientId], references: [id])
+    patientId           String
+    dentist             Dentist  @relation(fields: [dentistId], references: [id])
+    dentistId           String
+    appointmentDateTime DateTime
+}
+
+model Patient {
+    id             String          @id @default(cuid())
+    lastName       String
+    firstName      String
+    middleName     String?
+    age            Int
+    sex            String?
+    address        String
+    contactNumber  String?
+    email          String          @unique
+    birthday       String // Date
+    nationality    String
+    occupation     String
+    refferedBy     String
+    MedicalHistory MedicalHistory?
+    Treatment      Treatment[]
+    Dentist        Dentist         @relation(fields: [dentistId], references: [id])
+    dentistId      String
+    Appointment    Appointment[]
 }
