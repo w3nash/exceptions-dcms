@@ -5,9 +5,11 @@ import {
   type NextAuthOptions,
 } from "next-auth";
 import { type Adapter } from "next-auth/adapters";
+import Credentials from "next-auth/providers/credentials";
 
 import { env } from "~/env";
 import { db } from "~/server/db";
+import bcrypt from "bcrypt";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -37,16 +39,43 @@ declare module "next-auth" {
  */
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    session: async ({ session, user }) => {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: user.id,
+        },
+      };
+    },
   },
   adapter: PrismaAdapter(db) as Adapter,
   providers: [
+    Credentials({
+      credentials: {
+        username: {},
+        password: {},
+      },
+      async authorize(credentials) {
+        const user = await db.user.findUnique({
+          where: { username: credentials?.username },
+        });
+
+        if (!user) {
+          return null;
+        }
+
+        const valid = await bcrypt.compare(
+          credentials?.password!,
+          user.password,
+        );
+        if (!valid) {
+          return null;
+        }
+
+        return user;
+      },
+    }),
     /**
      * ...add more providers here.
      *
@@ -57,6 +86,7 @@ export const authOptions: NextAuthOptions = {
      * @see https://next-auth.js.org/providers/github
      */
   ],
+  secret: env.NEXTAUTH_SECRET,
 };
 
 /**

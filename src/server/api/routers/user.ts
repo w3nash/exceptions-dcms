@@ -26,37 +26,36 @@ export const userRouter = createTRPCRouter({
     return user;
   }),
   // Store: Create a new item
-  store: protectedProcedure
-    .input(storeValidation)
-    .mutation(async ({ input }) => {
-      try {
-        input.user.password = await bcrypt.hash(input.user.password, 10);
-        const user = await db.user.create({
-          data: {
-            ...input.user,
-            UserDetails: {
-              create: {
-                ...input.details,
-              },
+  store: publicProcedure.input(storeValidation).mutation(async ({ input }) => {
+    try {
+      input.user.password = await bcrypt
+        .hash(input.user.password, 10)
+        .then((hashed) => hashed);
+      const user = await db.user.create({
+        data: {
+          ...input.user,
+          UserDetails: {
+            create: {
+              ...input.details,
             },
           },
-          include: { UserDetails: true },
-        });
-        return user;
-      } catch (e) {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-    }),
+        },
+        include: { UserDetails: true },
+      });
+      return user;
+    } catch (e) {
+      throw new TRPCError({ code: "FORBIDDEN" });
+    }
+  }),
   // Update: Update an existing item by ID
   update: protectedProcedure
     .input(updateValidation)
     .mutation(async ({ input }) => {
       try {
         if (input.data.user?.password) {
-          input.data.user.password = await bcrypt.hash(
-            input.data.user.password,
-            10,
-          );
+          input.data.user.password = await bcrypt
+            .hash(input.data.user.password, 10)
+            .then((hashed) => hashed);
         }
         const user = await db.user.update({
           where: { id: input.id },
