@@ -3,13 +3,7 @@ import { storeValidation, updateValidation } from "./validations/users";
 import { idValidation } from "./validations/generic";
 import bcrypt from "bcrypt";
 
-import {
-  createTRPCRouter,
-  protectedProcedure,
-  publicProcedure,
-  adminProcedure,
-} from "~/server/api/trpc";
-
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { db } from "~/server/db";
 
 export const userRouter = createTRPCRouter({
@@ -19,34 +13,39 @@ export const userRouter = createTRPCRouter({
   }),
   // Show: Retrieve a single item by ID
   show: protectedProcedure.input(idValidation).query(async ({ input }) => {
-    const user = await db.user.findUnique({ where: { id: input.id } });
+    const user = await db.user.findUnique({
+      where: { id: input.id },
+    });
+
     if (!user) {
       throw new TRPCError({ code: "NOT_FOUND" });
     }
+
     return user;
   }),
   // Store: Create a new item
-  store: publicProcedure.input(storeValidation).mutation(async ({ input }) => {
-    try {
-      input.user.password = await bcrypt
-        .hash(input.user.password, 10)
-        .then((hashed) => hashed);
-      const user = await db.user.create({
-        data: {
-          ...input.user,
-          UserDetails: {
-            create: {
-              ...input.details,
+  store: protectedProcedure
+    .input(storeValidation)
+    .mutation(async ({ input }) => {
+      try {
+        input.user.password = await bcrypt
+          .hash(input.user.password, 10)
+          .then((hashed) => hashed);
+        return await db.user.create({
+          data: {
+            ...input.user,
+            UserDetails: {
+              create: {
+                ...input.details,
+              },
             },
           },
-        },
-        include: { UserDetails: true },
-      });
-      return user;
-    } catch (e) {
-      throw new TRPCError({ code: "FORBIDDEN" });
-    }
-  }),
+          include: { UserDetails: true },
+        });
+      } catch (error) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+    }),
   // Update: Update an existing item by ID
   update: protectedProcedure
     .input(updateValidation)
@@ -70,7 +69,7 @@ export const userRouter = createTRPCRouter({
           include: { UserDetails: true },
         });
         return user;
-      } catch (e) {
+      } catch (error) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
     }),
@@ -84,7 +83,7 @@ export const userRouter = createTRPCRouter({
             id: input.id,
           },
         });
-      } catch (e) {
+      } catch (error) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
     }),

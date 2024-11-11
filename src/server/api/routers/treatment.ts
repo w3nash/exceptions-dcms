@@ -1,45 +1,62 @@
-import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import { storeValidation, updateValidation } from "./validations/treatment";
+import { idValidation } from "./validations/generic";
 
-import {
-  createTRPCRouter,
-  protectedProcedure,
-  publicProcedure,
-  adminProcedure,
-} from "~/server/api/trpc";
-
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { db } from "~/server/db";
 
 export const treatmentRouter = createTRPCRouter({
   // Index: Retrieve all items
   index: protectedProcedure.query(async () => {
-    // TODO
+    return await db.user.findMany();
   }),
   // Show: Retrieve a single item by ID
-  show: protectedProcedure.input(z.string()).query(async ({ input }) => {
-    // TODO
+  show: protectedProcedure.input(idValidation).query(async ({ input }) => {
+    const treatment = await db.treatment.findUnique({
+      where: { id: input.id },
+    });
+
+    if (!treatment) {
+      throw new TRPCError({ code: "NOT_FOUND" });
+    }
+
+    return treatment;
   }),
   // Store: Create a new item
   store: protectedProcedure
-    .input(z.object({ name: z.string(), description: z.string().optional() }))
+    .input(storeValidation)
     .mutation(async ({ input }) => {
-      // TODO
+      try {
+        return await db.treatment.create({
+          data: input,
+        });
+      } catch (error) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
     }),
   // Update: Update an existing item by ID
   update: protectedProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        data: z.object({
-          name: z.string().optional(),
-          description: z.string().optional(),
-        }),
-      }),
-    )
+    .input(updateValidation)
     .mutation(async ({ input }) => {
-      // TODO
+      try {
+        return await db.treatment.update({
+          where: { id: input.id },
+          data: input.data,
+        });
+      } catch (error) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
     }),
   // Destroy: Delete an item by ID
-  destroy: protectedProcedure.input(z.string()).mutation(async ({ input }) => {
-    // TODO
-  }),
+  destroy: protectedProcedure
+    .input(idValidation)
+    .mutation(async ({ input }) => {
+      try {
+        await db.treatment.delete({
+          where: { id: input.id },
+        });
+      } catch (error) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+    }),
 });
