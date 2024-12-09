@@ -14,7 +14,35 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-// Necessary for Next auth
+model UserDetails {
+    id            String   @id @default(cuid())
+    user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId        String   @unique
+    lastName      String
+    firstName     String
+    middleName    String?
+    birthday      DateTime
+    sex           String
+    address       String?
+    contactNumber String?
+    position      String
+    monthlySalary String?
+}
+
+model User {
+    id            String        @id @default(cuid())
+    email         String        @unique
+    emailVerified DateTime?
+    image         String?
+    username      String        @unique
+    password      String // @db.Text
+    role          Int           @default(1)
+    accounts      Account[]
+    sessions      Session[]
+    UserDetails   UserDetails?
+    Appointment   Appointment[]
+}
+
 model Account {
     id                       String  @id @default(cuid())
     userId                   String
@@ -42,117 +70,33 @@ model Session {
     user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model UserDetails {
-    id            String   @id @default(cuid())
-    user          User     @relation(fields: [userId], references: [id])
-    userId        String   @unique
-    lastName      String
-    firstName     String
-    middleName    String?
-    birthday      String
-    age           Int
-    sex           String?
-    address       String?
-    contactNumber String?
-    position      String
-    monthlySalary String?
-}
-
-model User {
-    id            String       @id @default(cuid())
-    email         String?      @unique
-    emailVerified DateTime?
-    image         String?
-    username      String       @unique
-    password      String // @db.Text
-    role          Int          @default(1)
-    accounts      Account[]
-    sessions      Session[]
-    UserDetails   UserDetails?
-    Dentist       Dentist[]
-}
-
-model VerificationToken {
-    identifier String
-    token      String   @unique
-    expires    DateTime
-
-    @@unique([identifier, token])
-}
-
-model Dentist {
-    id          String        @id @default(cuid())
-    user        User          @relation(fields: [userId], references: [id])
-    userId      String
-    Patient     Patient[]
-    Appointment Appointment[]
-}
-
-model MedicalHistory {
-    id                 String   @id @default(cuid())
-    patient            Patient  @relation(fields: [patientId], references: [id])
-    patientId          String   @unique
-    hospitalization    String?
-    medications        String?
-    diseases           String?
-    allergies          String?
-    xray               String?
-    facialMarks        String?
-    tobaccoConsumption String?
-    alcoholConsumption String?
-    createdAt          DateTime @default(now())
-    updatedAt          DateTime @updatedAt
-}
-
-model Procedure {
-    id            String      @id @default(cuid())
-    procedureName String
-    Treatment     Treatment[]
-    createdAt     DateTime    @default(now())
-    updatedAt     DateTime    @updatedAt
-}
-
-model Treatment {
-    id          String    @id @default(cuid())
-    patient     Patient   @relation(fields: [patientId], references: [id])
-    patientId   String
-    Procedure   Procedure @relation(fields: [procedureId], references: [id])
-    procedureId String
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
-}
-
 model Appointment {
     id        String   @id @default(cuid())
-    patient   Patient  @relation(fields: [patientId], references: [id])
+    Patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
     patientId String
-    dentist   Dentist  @relation(fields: [dentistId], references: [id])
-    dentistId String
     schedule  DateTime
     status    String
+    type      String
+    Dentist   User     @relation(fields: [dentistId], references: [id], onDelete: Cascade)
+    dentistId String
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
 
 model Patient {
-    id             String          @id @default(cuid())
-    lastName       String
-    firstName      String
-    middleName     String?
-    age            Int
-    sex            String
-    address        String
-    contactNumber  String?
-    email          String          @unique
-    birthday       String // Date
-    nationality    String
-    occupation     String
-    refferedBy     String?
-    MedicalHistory MedicalHistory?
-    Treatment      Treatment[]
-    Dentist        Dentist         @relation(fields: [dentistId], references: [id])
-    dentistId      String
-    Appointment    Appointment[]
-    createdAt      DateTime        @default(now())
-    updatedAt      DateTime        @updatedAt
+    id            String   @id @default(cuid())
+    lastName      String
+    firstName     String
+    middleName    String?
+    sex           String
+    address       String
+    contactNumber String?
+    email         String   @unique
+    birthday      DateTime
+    nationality   String
+    occupation    String
+    referredBy    String?
+    Appointment   Appointment[]
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
 }

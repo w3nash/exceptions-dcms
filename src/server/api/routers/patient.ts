@@ -1,45 +1,74 @@
-import { z } from "zod";
-
-import {
-  createTRPCRouter,
-  protectedProcedure,
-  publicProcedure,
-  adminProcedure,
-} from "~/server/api/trpc";
-
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { db } from "~/server/db";
+import { idValidation } from "./validations/generic";
+import { TRPCError } from "@trpc/server";
+import { createValidation, updateValidation } from "./validations/patient";
 
-export const patientRouter = createTRPCRouter({
-  // Index: Retrieve all items
-  index: protectedProcedure.query(async () => {
-    // TODO
+export const patientsRouter = createTRPCRouter({
+  getAllPatients: protectedProcedure.query(async () => {
+    return await db.patient.findMany({
+      select: {
+        id: true,
+        lastName: true,
+        firstName: true,
+        sex: true,
+        email: true,
+        nationality: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: [
+        { lastName: "asc" },
+        { firstName: "asc" },
+        { middleName: "asc" },
+      ],
+    });
   }),
-  // Show: Retrieve a single item by ID
-  show: protectedProcedure.input(z.string()).query(async ({ input }) => {
-    // TODO
-  }),
-  // Store: Create a new item
-  store: protectedProcedure
-    .input(z.object({ name: z.string(), description: z.string().optional() }))
-    .mutation(async ({ input }) => {
-      // TODO
+  getPatient: protectedProcedure
+    .input(idValidation)
+    .query(async ({ input }) => {
+      return await db.patient.findUnique({
+        where: { id: input.id },
+      });
     }),
-  // Update: Update an existing item by ID
-  update: protectedProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        data: z.object({
-          name: z.string().optional(),
-          description: z.string().optional(),
-        }),
-      }),
-    )
+  createPatient: protectedProcedure
+    .input(createValidation)
     .mutation(async ({ input }) => {
-      // TODO
+      try {
+        return await db.patient.create({ data: input });
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create patient",
+        });
+      }
     }),
-  // Destroy: Delete an item by ID
-  destroy: protectedProcedure.input(z.string()).mutation(async ({ input }) => {
-    // TODO
-  }),
+  deletePatient: protectedProcedure
+    .input(idValidation)
+    .mutation(async ({ input }) => {
+      try {
+        return await db.patient.delete({ where: { id: input.id } });
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete patient",
+        });
+      }
+    }),
+  updatePatient: protectedProcedure
+    .input(updateValidation)
+    .mutation(async ({ input }) => {
+      console.log(input);
+      try {
+        return await db.patient.update({
+          where: { id: input.id },
+          data: input.data,
+        });
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update patient",
+        });
+      }
+    }),
 });

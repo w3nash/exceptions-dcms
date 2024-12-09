@@ -6,10 +6,11 @@ import {
 } from "next-auth";
 import { type Adapter } from "next-auth/adapters";
 import Credentials from "next-auth/providers/credentials";
-
+import { v4 as uuid } from "uuid";
+import { encode as defaultEncode } from "next-auth/jwt";
 import { env } from "~/env";
 import { db } from "~/server/db";
-import bcrypt from "bcrypt";
+import { api } from "~/trpc/server";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -21,15 +22,16 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
-      // ...other properties
       role: number;
+      username: string;
+      // ...other properties
     } & DefaultSession["user"];
   }
 
-  // interface User {
-  //   // ...other properties
-  //   // role: UserRole;
-  // }
+  interface User {
+    role: number;
+    username: string;
+  }
 }
 
 /**
@@ -39,12 +41,23 @@ declare module "next-auth" {
  */
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    session: async ({ session, user }) => {
+    jwt: async ({ token, user, account }) => {
+      if (account?.provider === "credentials") {
+        token.credentials = true;
+      }
+      return token;
+    },
+    session: async ({ session, token, user }) => {
       return {
         ...session,
+        ...token,
         user: {
           ...session.user,
           id: user.id,
+          role: user.role,
+          email: user.email,
+          username: user.username,
+          image: user.image,
         },
       };
     },
@@ -56,24 +69,12 @@ export const authOptions: NextAuthOptions = {
         username: {},
         password: {},
       },
+
       async authorize(credentials) {
-        const user = await db.user.findUnique({
-          where: { username: credentials?.username },
-        });
-
-        if (!user) {
-          return null;
+        if (!credentials) {
+          throw new Error("All fields must be provided.");
         }
-
-        const valid = await bcrypt.compare(
-          credentials?.password!,
-          user.password,
-        );
-        if (!valid) {
-          return null;
-        }
-
-        return user;
+        return await api.authRouter.loginUser(credentials);
       },
     }),
     /**
@@ -86,6 +87,34 @@ export const authOptions: NextAuthOptions = {
      * @see https://next-auth.js.org/providers/github
      */
   ],
+  jwt: {
+    encode: async function (params) {
+      if (params.token?.credentials) {
+        const sessionToken = uuid();
+
+        if (!params.token.sub) {
+          throw new Error("No user ID found in token");
+        }
+
+        const createdSession = await api.authRouter.createSession({
+          sessionToken: sessionToken,
+          userId: params.token.sub,
+          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        });
+
+        if (!createdSession) {
+          throw new Error("Failed to create session");
+        }
+
+        return sessionToken;
+      }
+
+      return defaultEncode(params);
+    },
+  },
+  pages: {
+    signIn: "/login",
+  },
   secret: env.NEXTAUTH_SECRET,
 };
 
