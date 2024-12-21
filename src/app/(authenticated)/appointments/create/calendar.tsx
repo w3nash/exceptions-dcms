@@ -24,7 +24,7 @@ export default function AppointmentCalendar() {
       selected={date}
       onSelect={setDate}
       className="rounded-md border"
-      disabled={[{ before: today }, { dayOfWeek: [0, 4] }]}
+      disabled={[{ dayOfWeek: [0, 4] }]}
     />
   );
 }

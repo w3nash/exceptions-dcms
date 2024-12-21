@@ -15,9 +15,9 @@ export const storeValidation = z.object({
     birthday: z.date(),
     sex: z.string(),
     address: z.string().nullable().optional(),
-    contactNumber: z.string(),
+    contactNumber: z.string().nullable().optional(),
     position: z.string(),
-    monthlySalary: z.string(),
+    monthlySalary: z.string().nullable().optional(),
   }),
 });
 

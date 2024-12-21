@@ -29,16 +29,11 @@ export default function DashboardCalendar() {
   }
 
   const [date, setDate] = useState<Date | undefined>(today);
-  const [hour, setHour] = useState<string | undefined>(
-    (currentHour + 1).toString(),
-  );
+  const [hour, setHour] = useState<string | undefined>("09");
   const [minute, setMinute] = useState<string | undefined>("00");
 
   const hours = Array.from({ length: 7 }, (_, i) =>
     (i + 9).toString().padStart(2, "0"),
-  ).filter(
-    (h) =>
-      parseInt(h) > currentHour || today.getDate() !== new Date().getDate(),
   );
 
   const minutes = Array.from({ length: 6 }, (_, i) =>

@@ -25,7 +25,7 @@ export default async function RootLayout({
         <TRPCReactProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             {children}
-            <Toaster />
+            <Toaster position="top-right" />
           </ThemeProvider>
         </TRPCReactProvider>
       </body>

@@ -8,12 +8,7 @@ import {
 import { idValidation } from "./validations/generic";
 import bcrypt from "bcrypt";
 
-import {
-  adminProcedure,
-  createTRPCRouter,
-  protectedProcedure,
-  publicProcedure,
-} from "~/server/api/trpc";
+import { protectedProcedure, createTRPCRouter } from "~/server/api/trpc";
 import { db } from "~/server/db";
 
 export const userRouter = createTRPCRouter({
@@ -46,7 +41,7 @@ export const userRouter = createTRPCRouter({
       position: user.UserDetails?.position || "",
     }));
   }),
-  getUser: adminProcedure.input(idValidation).query(async ({ input }) => {
+  getUser: protectedProcedure.input(idValidation).query(async ({ input }) => {
     const user = await db.user.findUnique({
       where: { id: input.id },
       select: {
@@ -94,7 +89,7 @@ export const userRouter = createTRPCRouter({
 
     return flattenedUser;
   }),
-  createUser: adminProcedure
+  createUser: protectedProcedure
     .input(storeValidation)
     .mutation(async ({ input }) => {
       try {
@@ -116,7 +111,7 @@ export const userRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
     }),
-  updateUser: adminProcedure
+  updateUser: protectedProcedure
     .input(updateValidation)
     .mutation(async ({ input }) => {
       try {
@@ -137,17 +132,19 @@ export const userRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
     }),
-  deleteUser: adminProcedure.input(idValidation).mutation(async ({ input }) => {
-    try {
-      await db.user.delete({
-        where: {
-          id: input.id,
-        },
-      });
-    } catch (error) {
-      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-    }
-  }),
+  deleteUser: protectedProcedure
+    .input(idValidation)
+    .mutation(async ({ input }) => {
+      try {
+        await db.user.delete({
+          where: {
+            id: input.id,
+          },
+        });
+      } catch (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+    }),
   getAllDentists: protectedProcedure.query(async () => {
     return await db.user.findMany({
       where: {

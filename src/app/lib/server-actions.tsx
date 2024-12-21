@@ -10,12 +10,7 @@ export async function deleteAppointment(id: string) {
     revalidatePath("/appointments");
     revalidatePath("/dashboard");
   } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to delete appointment. Please try again.",
-    };
+    throw error;
   }
 }
 
@@ -26,12 +21,7 @@ export async function updatePatient(data: any) {
     revalidatePath("/patient-records/patient/" + data.id);
     revalidatePath("/dashboard");
   } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to update patient. Please try again.",
-    };
+    throw error;
   }
 }
 
@@ -40,12 +30,7 @@ export async function updateProfile(data: any) {
     await api.userRouter.updateCurrentUser(data);
     revalidatePath("/dashboard");
   } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to update profile. Please try again.",
-    };
+    throw error;
   }
 }
 
@@ -54,12 +39,7 @@ export async function updatePassword(data: any) {
     await api.userRouter.updateCurrentUserPassword(data);
     revalidatePath("/dashboard");
   } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to update password. Please try again.",
-    };
+    throw error;
   }
 }
 
@@ -70,12 +50,7 @@ export async function updateUser(data: any) {
     revalidatePath("/staff/" + data.id);
     revalidatePath("/dashboard");
   } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to update user. Please try again.",
-    };
+    throw error;
   }
 }
 
@@ -86,12 +61,7 @@ export async function updateAppointment(data: any) {
     revalidatePath("/appointments/" + data.id);
     revalidatePath("/dashboard");
   } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to update appointment. Please try again.",
-    };
+    throw error;
   }
 }
 
@@ -101,12 +71,7 @@ export async function deletePatient(id: string) {
     revalidatePath("/patient-records");
     revalidatePath("/dashboard");
   } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to delete patient. Please try again.",
-    };
+    throw error;
   }
 }
 
@@ -116,12 +81,7 @@ export async function deleteUser(id: string) {
     revalidatePath("/staff");
     revalidatePath("/dashboard");
   } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to delete user. Please try again.",
-    };
+    throw error;
   }
 }
 
@@ -150,12 +110,7 @@ export const createUser = async (data: any) => {
     revalidatePath("/staff");
     revalidatePath("/dashboard");
   } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to create user. Please try again.",
-    };
+    throw error;
   }
 };
 
@@ -165,12 +120,7 @@ export const createAppointment = async (data: any) => {
     revalidatePath("/appointments");
     revalidatePath("/dashboard");
   } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to create appointment. Please try again.",
-    };
+    throw error;
   }
 };
 
@@ -180,154 +130,50 @@ export const createPatient = async (data: any) => {
     revalidatePath("/patient-records");
     revalidatePath("/dashboard");
   } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to create patient. Please try again.",
-    };
+    throw error;
   }
 };
 
 export const getCurrentUser = cache(async () => {
-  try {
-    return await api.userRouter.getCurrentUser();
-  } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch current user. Please try again.",
-    };
-  }
+  return await api.userRouter.getCurrentUser();
 });
 
 export const getUsers = cache(async () => {
-  try {
-    return await api.userRouter.getAllUsers();
-  } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch users. Please try again.",
-    };
-  }
+  return await api.userRouter.getAllUsers();
 });
 
 export const getUser = cache(async (id: string) => {
-  try {
-    return await api.userRouter.getUser({ id });
-  } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch user. Please try again.",
-    };
-  }
+  return await api.userRouter.getUser({ id });
 });
 
 export const getAppointments = cache(async () => {
-  try {
-    return await api.appointmentsRouter.getAllAppointments();
-  } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch appointments. Please try again.",
-    };
-  }
+  return await api.appointmentsRouter.getAllAppointments();
 });
 
 export const getAppointment = cache(async (id: string) => {
-  try {
-    return await api.appointmentsRouter.getAppointment({ id });
-  } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch appointment. Please try again.",
-    };
-  }
+  return await api.appointmentsRouter.getAppointment({ id });
 });
 
 export const getDashboardCounts = cache(async () => {
-  try {
-    return await api.dashboardRouter.getCounts();
-  } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch dashboard counts. Please try again.",
-    };
-  }
+  return await api.dashboardRouter.getCounts();
 });
 
 export const getDashboardChartData = cache(async () => {
-  try {
-    return await api.dashboardRouter.getChartData();
-  } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch dashboard chart data. Please try again.",
-    };
-  }
+  return await api.dashboardRouter.getChartData();
 });
 
 export const getDashboardTodayAppointments = cache(async () => {
-  try {
-    return await api.dashboardRouter.getTodayAppointments();
-  } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch today's appointments. Please try again.",
-    };
-  }
+  return await api.dashboardRouter.getTodayAppointments();
 });
 
 export const getDentists = cache(async () => {
-  try {
-    return await api.userRouter.getAllDentists();
-  } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch dentists. Please try again.",
-    };
-  }
+  return await api.userRouter.getAllDentists();
 });
 
 export const getPatients = cache(async () => {
-  try {
-    return await api.patientsRouter.getAllPatients();
-  } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch patients. Please try again.",
-    };
-  }
+  return await api.patientsRouter.getAllPatients();
 });
 
 export const getPatient = cache(async (id: string) => {
-  try {
-    return await api.patientsRouter.getPatient({ id });
-  } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch patient. Please try again.",
-    };
-  }
+  return await api.patientsRouter.getPatient({ id });
 });
